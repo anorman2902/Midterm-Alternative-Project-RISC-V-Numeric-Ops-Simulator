@@ -8,10 +8,10 @@ WIDTH = 32
 
 # convert signed 32-bit bit-vector to Python int
 def bits_to_signed(bits: Bits) -> int:
-    if bits[0] == '0':
-        return to_uint(bits)
-    neg = negate(bits)
-    return -to_uint(neg)
+    u = to_uint(bits)
+    if bits[0] == '1':
+        return u - (1 << 32)
+    return u
 
 # multiply two signed numbers (shift-and-add)
 def mul_signed(rs1: Bits, rs2: Bits) -> Tuple[Bits, Bits]:
@@ -32,15 +32,21 @@ def mul_unsigned(rs1: Bits, rs2: Bits) -> Tuple[Bits, Bits]:
     hi = (prod >> 32) & 0xFFFFFFFF
     return int_to_bits(hi), int_to_bits(lo)
 
+
 # signed division (RV32M behavior)
 def div_signed(rs1: Bits, rs2: Bits) -> Bits:
     a = bits_to_signed(rs1)
     b = bits_to_signed(rs2)
+
     if b == 0:
-        return int_to_bits(-1)     # division by zero = -1
+        return int_to_bits(-1)          # q = -1 on divide by zero
     if a == -2**31 and b == -1:
-        return int_to_bits(a)      # overflow case = dividend
-    return int_to_bits(a // b)
+        return int_to_bits(a)           # overflow case → dividend
+
+    q = int(a / b)                      # truncates toward zero
+    return int_to_bits(q)
+
+
 
 # unsigned division
 def div_unsigned(rs1: Bits, rs2: Bits) -> Bits:
@@ -50,15 +56,19 @@ def div_unsigned(rs1: Bits, rs2: Bits) -> Bits:
         return int_to_bits(0xFFFFFFFF)
     return int_to_bits(a // b)
 
-# signed remainder (RV32M behavior)
+# signed remainder (same sign as dividend)
 def rem_signed(rs1: Bits, rs2: Bits) -> Bits:
     a = bits_to_signed(rs1)
     b = bits_to_signed(rs2)
+
     if b == 0:
-        return int_to_bits(a)
+        return int_to_bits(a)           # r = dividend on divide by zero
     if a == -2**31 and b == -1:
-        return int_to_bits(0)
-    return int_to_bits(a % b)
+        return int_to_bits(0)           # overflow case → remainder 0
+
+    q = int(a / b)                      # trunc toward zero
+    r = a - q * b                       # ensures a = q*b + r, sign(r)=sign(a)
+    return int_to_bits(r)
 
 # unsigned remainder
 def rem_unsigned(rs1: Bits, rs2: Bits) -> Bits:
@@ -69,10 +79,10 @@ def rem_unsigned(rs1: Bits, rs2: Bits) -> Bits:
     return int_to_bits(a % b)
 
 
-# helper: convert Python int → 32-bit two's complement bit-vector
+# helper: convert Python int → 32-bit two's-complement bits
 def int_to_bits(x: int) -> Bits:
     x &= 0xFFFFFFFF
     out: Bits = []
-    for i in range(WIDTH-1, -1, -1):
+    for i in range(31, -1, -1):
         out.append('1' if (x >> i) & 1 else '0')
     return out
