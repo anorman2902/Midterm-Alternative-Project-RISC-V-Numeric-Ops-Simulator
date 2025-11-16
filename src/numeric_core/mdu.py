@@ -40,7 +40,6 @@ def cmp_unsigned(a: Bits, b: Bits) -> int:
 def is_zero(bits: Bits) -> bool:
     return all(b == '0' for b in bits)
 
-
 # Unsigned restoring division on bit-vectors: dividend / divisor -> (q, r).
 def unsigned_divmod_bits(dividend: Bits, divisor: Bits) -> Tuple[Bits, Bits]:
     n = len(dividend)
@@ -61,7 +60,6 @@ def unsigned_divmod_bits(dividend: Bits, divisor: Bits) -> Tuple[Bits, Bits]:
             Q[-1] = '1'
 
     return Q, R
-
 
 # Unsigned multiply: returns (hi, lo) 64-bit product split into two 32-bit vectors.
 def mul_unsigned(rs1: Bits, rs2: Bits) -> Tuple[Bits, Bits]:
@@ -107,7 +105,6 @@ def mul_signed(rs1: Bits, rs2: Bits) -> Tuple[Bits, Bits]:
     neg64 = negate(res64)
     return neg64[:WIDTH], neg64[WIDTH:]
 
-
 # RV32M DIVU: unsigned divide, quotient only.
 def div_unsigned(rs1: Bits, rs2: Bits) -> Bits:
     assert len(rs1) == WIDTH and len(rs2) == WIDTH
@@ -118,7 +115,6 @@ def div_unsigned(rs1: Bits, rs2: Bits) -> Bits:
 
     q, _ = unsigned_divmod_bits(rs1, rs2)
     return q
-
 
 # RV32M REMU: unsigned remainder.
 def rem_unsigned(rs1: Bits, rs2: Bits) -> Bits:
@@ -131,13 +127,12 @@ def rem_unsigned(rs1: Bits, rs2: Bits) -> Bits:
     _, r = unsigned_divmod_bits(rs1, rs2)
     return r
 
-
 # 32-bit patterns for INT_MIN and -1 in two's-complement.
 INT_MIN_BITS: Bits = ['1'] + ['0'] * (WIDTH - 1)
 NEG_ONE_BITS: Bits = ['1'] * WIDTH
 
-
 # RV32M DIV: signed divide (truncates toward zero).
+# AI-BEGIN
 def div_signed(rs1: Bits, rs2: Bits) -> Bits:
     assert len(rs1) == WIDTH and len(rs2) == WIDTH
 
@@ -163,7 +158,6 @@ def div_signed(rs1: Bits, rs2: Bits) -> Bits:
 
     return q
 
-
 # RV32M REM: signed remainder (same sign as dividend).
 def rem_signed(rs1: Bits, rs2: Bits) -> Bits:
     assert len(rs1) == WIDTH and len(rs2) == WIDTH
@@ -188,9 +182,9 @@ def rem_signed(rs1: Bits, rs2: Bits) -> Bits:
     r = r_mag[:] if sign_a == '0' else negate(r_mag)
 
     return r
+# AI-END
 
-
-# Simple helper used earlier in the project: low 32 bits of signed multiply.
+# Helper used earlier in the project: low 32 bits of signed multiply.
 def mul_low(rs1: Bits, rs2: Bits) -> Dict[str, object]:
     hi, lo = mul_signed(rs1, rs2)
     return {

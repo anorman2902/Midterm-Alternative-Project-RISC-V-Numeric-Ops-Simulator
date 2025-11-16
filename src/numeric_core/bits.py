@@ -1,5 +1,4 @@
 # src/numeric_core/bits.py
-# AI-BEGIN: helper primitives
 from typing import List, Tuple
 
 
@@ -19,7 +18,6 @@ def ones(width: int) -> Bits:
 
 def zeros(width: int) -> Bits:
     return ['0'] * width
-
 
 def from_uint(n: int, width: int) -> Bits:
     # Only used in tests OR when n was built from bits already; not in arithmetic.
@@ -48,14 +46,13 @@ def pretty_bin32(bits: Bits) -> str:
     # group into 8 nibbles with underscores
     return '_'.join(s[i:i+8] for i in range(0, 32, 8))
 
-
+# AI-BEGIN
 _HEX = {
 '0000':'0','0001':'1','0010':'2','0011':'3',
 '0100':'4','0101':'5','0110':'6','0111':'7',
 '1000':'8','1001':'9','1010':'A','1011':'B',
 '1100':'C','1101':'D','1110':'E','1111':'F',
 }
-
 
 def to_hex32(bits: Bits) -> str:
     s = ''.join(bits)

@@ -8,6 +8,7 @@ Bits = List[Bit]
 WIDTH = 32
 
 # Compute NZCV flags for a 32-bit result
+# AI-BEGIN
 def flags_NZCV(result: Bits, carry_out: Bit, a_msb: Bit, b_msb: Bit) -> Dict[str,int]:
     N = 1 if result[0]=='1' else 0
     Z = 1 if all(b=='0' for b in result) else 0
@@ -16,6 +17,8 @@ def flags_NZCV(result: Bits, carry_out: Bit, a_msb: Bit, b_msb: Bit) -> Dict[str
     r_msb = result[0]
     V = 1 if (a_msb == b_msb and r_msb != a_msb) else 0
     return {'N':N,'Z':Z,'C':C,'V':V}
+# AI-END
+
 
 # rs1 + rs2 (32-bit add)
 def alu_add(rs1: Bits, rs2: Bits) -> Tuple[Bits, Dict[str,int]]:

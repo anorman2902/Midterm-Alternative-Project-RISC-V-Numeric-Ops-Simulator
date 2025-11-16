@@ -13,6 +13,7 @@ from src.numeric_core.twos import (
 )
 
 # check hex patterns for common sample values
+# AI-BEGIN
 def test_encode_twos_samples_hex():
     cases = [
         (-2**31, "0x80000000"),  # INT_MIN
@@ -46,6 +47,7 @@ def test_encode_decode_roundtrip_in_range():
         dec = decode_twos_complement(enc["bits"])
         assert dec["value"] == v
         assert enc["overflow_flag"] == 0
+# AI-END
 
 # out-of-range value should set overflow_flag
 def test_overflow_flag_for_out_of_range_value():

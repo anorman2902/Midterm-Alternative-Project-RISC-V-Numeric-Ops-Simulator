@@ -11,6 +11,7 @@ from src.numeric_core.fpu_f32 import pack_f32, unpack_f32, fadd, fsub, fmul
 from src.numeric_core.bits import to_hex32
 
 # pack/unpack a known value: 3.75 -> 0x40700000
+# AI-BEGIN
 def test_pack_unpack_3_75():
     # 3.75f = sign=0, exp=128 (bias 127, exponent 1), frac=0x700000
     bits = pack_f32(0, 128, 0x700000)
@@ -49,7 +50,7 @@ def test_fadd_0_1_plus_0_2_rounding_edge():
 
     res = fadd(a, b)
 
-    # textbook expectation: 0.3000000119f -> 0x3E99999A
+    # expectation: 0.3000000119f -> 0x3E99999A
     # our simple FPU may round one ULP lower to 0x3E999999; accept either
     hex_res = to_hex32(res)
     assert hex_res in ("0x3E999999", "0x3E99999A")
@@ -71,7 +72,6 @@ def test_fsub_2_25_minus_1_5_is_0_75():
     assert e == 126
     assert f == 0x400000
 
-
 # simple multiply: 1.5 * 2.0 = 3.0
 def test_fmul_1_5_times_2_is_3():
     # 1.5f = 0x3FC00000 = sign=0, exp=127, frac=0x400000
@@ -88,3 +88,4 @@ def test_fmul_1_5_times_2_is_3():
     assert s == 0
     assert e == 128
     assert f == 0x400000
+# AI-END

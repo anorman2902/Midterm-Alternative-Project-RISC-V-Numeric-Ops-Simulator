@@ -1,0 +1,41 @@
+{
+  "total_lines": 917,
+  "ai_tagged_lines": 324,
+  "percent": 35.3,
+  "tools": ["ChatGPT"],
+  "method": "Counted lines inside AI-BEGIN/AI-END markers across all project files using PowerShell measure-object.",
+  "details": {
+    "src/numeric_core/bits.py": {
+      "ai_blocks": [
+        { "start_line": 22, "end_line": 71 }
+      ],
+      "ai_lines": 50
+    },
+    "src/numeric_core/twos.py": {
+      "ai_blocks": [
+        { "start_line": 10, "end_line": 69 }
+      ],
+      "ai_lines": 60
+    },
+    "src/numeric_core/alu.py": {
+      "ai_blocks": [
+        { "start_line": 11, "end_line": 20 }
+      ],
+      "ai_lines": 10
+    },
+    "src/numeric_core/mdu.py": {
+      "ai_blocks": [
+        { "start_line": 43, "end_line": 64 },
+        { "start_line": 110, "end_line": 132 },
+        { "start_line": 138, "end_line": 190 }
+      ],
+      "ai_lines": 98
+    },
+    "src/numeric_core/fpu_f32.py": {
+      "ai_blocks": [
+        { "start_line": 10, "end_line": 118 }
+      ],
+      "ai_lines": 109
+    }
+  }
+}

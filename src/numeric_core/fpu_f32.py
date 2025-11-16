@@ -24,6 +24,7 @@ def unpack_f32(bits: Bits) -> Tuple[int, int, int]:
     return sign, exp, frac
 
 # add two float32 values
+# AI-BEGIN
 def fadd(a: Bits, b: Bits) -> Bits:
     sa, ea, fa = unpack_f32(a)
     sb, eb, fb = unpack_f32(b)
@@ -72,6 +73,7 @@ def fadd(a: Bits, b: Bits) -> Bits:
 
     frac = mant & 0x7FFFFF
     return pack_f32(sign, exp, frac)
+# AI-END
 
 # subtract b from a
 def fsub(a: Bits, b: Bits) -> Bits:
@@ -81,6 +83,7 @@ def fsub(a: Bits, b: Bits) -> Bits:
     return fadd(a, bneg)
 
 # multiply two float32 values
+# AI-BEGIN
 def fmul(a: Bits, b: Bits) -> Bits:
     sa, ea, fa = unpack_f32(a)
     sb, eb, fb = unpack_f32(b)
@@ -114,3 +117,4 @@ def fmul(a: Bits, b: Bits) -> Bits:
 
     frac = mant & 0x7FFFFF
     return pack_f32(sign, exp, frac)
+# AI-END

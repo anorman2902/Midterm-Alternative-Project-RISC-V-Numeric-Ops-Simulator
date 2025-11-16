@@ -7,7 +7,7 @@ WIDTH = 32
 MIN = -(2 ** (WIDTH - 1))
 MAX = (2 ** (WIDTH - 1)) - 1
 
-# encode int -> 32-bit two's complement bits + flags
+# AI-BEGIN
 def encode_twos_complement(value: int) -> Dict[str, object]:
     overflow = 0
     if value < MIN or value > MAX:
@@ -66,6 +66,7 @@ def decode_twos_complement(bits: Bits) -> Dict[str, int]:
     for b in mag:
         val = (val << 1) | (1 if b == '1' else 0)
     return {'value': -val}
+# AI-END
 
 # sign-extend a bit-vector to a wider width
 def sign_extend(bits: Bits, new_width: int) -> Bits:
