@@ -18,6 +18,7 @@ The project includes:
 
 ## **Project Structure**
 
+```txt
 rv-numeric-sim/
 ├─ src/
 │ ├─ numeric_core/
