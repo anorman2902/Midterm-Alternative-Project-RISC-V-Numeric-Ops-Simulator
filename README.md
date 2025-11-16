@@ -41,6 +41,7 @@ rv-numeric-sim/
 ├─ README.md
 ├─ AI_USAGE.md
 └─ ai_report.json
+```
 
 ## **Module Overview**
 
