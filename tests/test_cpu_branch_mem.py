@@ -1,35 +1,31 @@
 import pytest
+from src.cpu_core.memory import Memory
+from src.cpu_core.datapath import SingleCycleCPU
 
-try:
-    from src.cpu_core.memory import Memory
-    from src.cpu_core.cpu_single_cycle import SingleCycleCPU
-    from src.cpu_core.prog_loader import load_hex_from_string
-except Exception:
-    from src.cpu_core.memory import Memory
-    from src.cpu_core.datapath import SingleCycleCPU
+IMEM_WORDS = 256
+DMEM_WORDS = 256
 
-    def load_hex_from_string(s: str):
-        lines = [ln.strip() for ln in s.strip().splitlines() if ln.strip()]
-        return [int(ln, 16) for ln in lines]
-
+def load_hex_from_string(s: str):
+    lines = [ln.strip() for ln in s.strip().splitlines() if ln.strip()]
+    return [int(ln, 16) for ln in lines]
 
 def run_hex_program(hex_text: str, max_steps: int = 200):
-    imem = Memory()
-    dmem = Memory()
-    words = load_hex_from_string(hex_text)
+    imem = Memory(IMEM_WORDS)
+    dmem = Memory(DMEM_WORDS)
 
+    words = load_hex_from_string(hex_text)
     for i, w in enumerate(words):
         imem.store_word(i * 4, w)
 
-    cpu = SingleCycleCPU(imem=imem, dmem=dmem)
+    cpu = SingleCycleCPU(imem, dmem)
 
     for _ in range(max_steps):
         cpu.step()
-        if getattr(cpu, "halted", False):
+        if imem.load_word(cpu.pc) == 0x00100073:
+            cpu.step()
             break
 
     return cpu, imem, dmem
-
 
 def test_store_then_load_word():
     hex_prog = """
@@ -41,14 +37,12 @@ def test_store_then_load_word():
     00100073
     """
     cpu, _, dmem = run_hex_program(hex_prog)
-    rf = cpu.rf
+    rf = cpu.regs
 
     assert rf.read(1) == 16
     assert rf.read(2) == 42
     assert rf.read(3) == 42
     assert rf.read(4) == 43
-
-    # confirm memory actually holds 42 at address 16
     assert dmem.load_word(16) == 42
 
 
@@ -61,7 +55,7 @@ def test_blt_loop_counts_to_five():
     00100073
     """
     cpu, _, _ = run_hex_program(hex_prog)
-    rf = cpu.rf
+    rf = cpu.regs
 
     assert rf.read(2) == 5
     assert rf.read(1) == 5

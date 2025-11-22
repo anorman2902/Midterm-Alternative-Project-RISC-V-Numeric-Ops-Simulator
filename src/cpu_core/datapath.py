@@ -232,3 +232,10 @@ class CPU:
     def run(self, max_steps: int = 10_000) -> None:
         for _ in range(max_steps):
             self.step()
+
+# -----------------------------------------------------------------------------
+# Compatibility alias so tests can import SingleCycleCPU
+# -----------------------------------------------------------------------------
+SingleCycleCPU = CPU
+
+

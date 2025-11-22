@@ -1,47 +1,28 @@
-"""
-RV32I CPU integration tests: arithmetic, logic, shifts, and JAL control flow.
-
-These tests load tiny hex programs into instruction memory, run the CPU
-for a bounded number of steps, and check final register values.
-
-If your loader/CPU class names differ slightly, adjust ONLY the helper
-section at the top.
-"""
-
 import pytest
+from src.cpu_core.memory import Memory
+from src.cpu_core.datapath import SingleCycleCPU
 
-try:
-    # Most likely layout from our cpu_core commits
-    from src.cpu_core.memory import Memory
-    from src.cpu_core.cpu_single_cycle import SingleCycleCPU
-    from src.cpu_core.prog_loader import load_hex_from_string
-except Exception:
-    # Fallback: if you named things slightly differently
-    from src.cpu_core.memory import Memory
-    from src.cpu_core.datapath import SingleCycleCPU
+IMEM_WORDS = 256
+DMEM_WORDS = 256
 
-    def load_hex_from_string(s: str):
-        lines = [ln.strip() for ln in s.strip().splitlines() if ln.strip()]
-        return [int(ln, 16) for ln in lines]
-
+def load_hex_from_string(s: str):
+    lines = [ln.strip() for ln in s.strip().splitlines() if ln.strip()]
+    return [int(ln, 16) for ln in lines]
 
 def run_hex_program(hex_text: str, max_steps: int = 200):
-    imem = Memory()
-    dmem = Memory()
+    imem = Memory(IMEM_WORDS)
+    dmem = Memory(DMEM_WORDS)
 
     words = load_hex_from_string(hex_text)
-
-    # Our Memory class supported word writes via store_word(addr, value)
-    # and treated addresses as byte addresses.
     for i, w in enumerate(words):
         imem.store_word(i * 4, w)
 
-    cpu = SingleCycleCPU(imem=imem, dmem=dmem)
+    cpu = SingleCycleCPU(imem, dmem)
 
     for _ in range(max_steps):
         cpu.step()
-        # We used EBREAK (0x00100073) as a stop sentinel.
-        if getattr(cpu, "halted", False):
+        if imem.load_word(cpu.pc) == 0x00100073:
+            cpu.step()
             break
 
     return cpu, imem, dmem
@@ -62,8 +43,7 @@ def test_arith_logic_and_shifts():
     00100073
     """
     cpu, _, _ = run_hex_program(hex_prog)
-
-    rf = cpu.rf  # register file from our earlier commits
+    rf = cpu.regs
 
     assert rf.read(1) == 3
     assert rf.read(2) == 4
@@ -86,7 +66,7 @@ def test_jal_skips_instruction_and_sets_link():
     00100073
     """
     cpu, _, _ = run_hex_program(hex_prog)
-    rf = cpu.rf
+    rf = cpu.regs
 
     assert rf.read(1) == 1
     assert rf.read(2) == 2

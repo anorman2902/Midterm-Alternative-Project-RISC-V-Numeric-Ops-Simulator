@@ -1,1 +1,18 @@
-__pycache__/n*.pycn.venv/nvenv/n.envn.vscode/n.DS_StorenThumbs.dbn
+# Byte-compiled Python files
+__pycache__/
+*.pyc
+
+# pytest cache
+.pytest_cache/
+
+# Virtual environments
+venv/
+.env/
+.venv/
+
+# VSCode settings
+.vscode/
+
+# OS junk
+.DS_Store
+Thumbs.db
