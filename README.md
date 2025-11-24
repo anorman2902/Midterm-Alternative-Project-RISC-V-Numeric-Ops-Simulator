@@ -229,6 +229,15 @@ Register File
                  v
           Writeback to RegFile
 
+## Test Results
+
+All CPU tests pass successfully.
+
+## Pytest Output
+..................................                                                                                                                                                                                                                                                                                                                                                                 [100%]
+34 passed in 0.13s
+
+
 AI Usage Disclosure
 
     See AI_USAGE.md for the complete AI usage log.

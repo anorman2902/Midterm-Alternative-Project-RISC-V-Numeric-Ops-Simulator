@@ -16,9 +16,30 @@ DMEM_WORDS = 256
 # Each line = one instruction in hex.
 # ------------------------------------------------------------
 def load_hex_from_string(s: str):
-    lines = [ln.strip() for ln in s.strip().splitlines() if ln.strip()]
-    return [int(ln, 16) for ln in lines]
+    """
+    Convert multi-line hex string into a list of 32-bit words.
+    Allows inline comments (# or //), blank lines, optional 0x prefixes,
+    and underscores for readability.
+    """
+    words = []
+    for ln in s.strip().splitlines():
+        ln = ln.strip()
+        if not ln:
+            continue
 
+        # Strip comments
+        ln = ln.split("#", 1)[0].split("//", 1)[0].strip()
+        if not ln:
+            continue
+
+        # Allow underscores and 0x prefix
+        ln = ln.replace("_", "")
+        if ln.lower().startswith("0x"):
+            ln = ln[2:]
+
+        words.append(int(ln, 16) & 0xFFFF_FFFF)
+
+    return words
 
 # ------------------------------------------------------------
 # Helper: Load program into memory and execute until either:
