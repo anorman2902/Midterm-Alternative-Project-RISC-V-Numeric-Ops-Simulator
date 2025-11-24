@@ -1,5 +1,3 @@
-# src/cpu_core/datapath.py
-
 from dataclasses import dataclass
 from typing import Optional
 
@@ -38,22 +36,36 @@ from .control import (
 )
 
 
+# ----------------------------------------
+# Basic CPU-wide constants
+# ----------------------------------------
 XLEN = 32
 WORD_MASK = 0xFFFF_FFFF
 
 
+# ----------------------------------------
+# Simple helpers to enforce 32-bit arithmetic
+# ----------------------------------------
 def _mask32(x: int) -> int:
     return x & WORD_MASK
 
 
 def _to_signed32(x: int) -> int:
+    """Interpret x as a signed 32-bit integer."""
     x &= WORD_MASK
     if x & 0x8000_0000:
         return x - (1 << 32)
     return x
 
 
+# ============================================================
+# AI-BEGIN
+# ALU logic: this is the main arithmetic/logic block.
+# Even though each case is simple, handling shifts and signed
+# comparisons requires care to match RV32I behavior.
+# ============================================================
 def _alu_execute(op: str, a: int, b: int) -> int:
+    """Execute a single ALU operation using masked 32-bit values."""
     a32 = _mask32(a)
     b32 = _mask32(b)
 
@@ -68,11 +80,11 @@ def _alu_execute(op: str, a: int, b: int) -> int:
     elif op == ALU_XOR:
         res = a32 ^ b32
     elif op == ALU_SLL:
-        res = (a32 << (b32 & 0x1F))
+        res = a32 << (b32 & 0x1F)
     elif op == ALU_SRL:
-        res = (a32 >> (b32 & 0x1F))
+        res = a32 >> (b32 & 0x1F)
     elif op == ALU_SRA:
-        # Arithmetic right shift uses the signed view of a
+        # Arithmetic shift requires a signed interpretation
         sa = _to_signed32(a32)
         res = sa >> (b32 & 0x1F)
     elif op == ALU_SLT:
@@ -82,12 +94,16 @@ def _alu_execute(op: str, a: int, b: int) -> int:
     elif op == ALU_COPY_B:
         res = b32
     else:
-        # Unknown operation: default to 0
-        res = 0
+        res = 0  # fallback for unknown opcodes
 
     return _mask32(res)
+# AI-END
+# ============================================================
 
 
+# ----------------------------------------
+# Branch condition evaluation
+# ----------------------------------------
 def _branch_taken(cond: Optional[str], rs1_val: int, rs2_val: int) -> bool:
     if cond is None:
         return False
@@ -112,46 +128,59 @@ def _branch_taken(cond: Optional[str], rs1_val: int, rs2_val: int) -> bool:
     return False
 
 
+# ----------------------------------------
+# CPU state snapshot
+# ----------------------------------------
 @dataclass
 class CPUState:
     pc: int
     regs: list[int]
 
 
+# ----------------------------------------
+# Main single-cycle CPU implementation
+# ----------------------------------------
 class CPU:
     def __init__(self, imem: Memory, dmem: Memory, pc_reset: int = 0) -> None:
         self.imem = imem
         self.dmem = dmem
         self.regs = RegFile()
         self.pc = _mask32(pc_reset)
-        self.cycle = 0  # counts how many step() calls have been made
+        self.cycle = 0  # number of executed instructions
 
     def reset(self, pc_reset: int = 0) -> None:
+        """Reset PC and register file."""
         self.pc = _mask32(pc_reset)
         self.regs.reset()
         self.cycle = 0
 
     def get_state(self) -> CPUState:
+        """Return the current PC and register snapshot."""
         return CPUState(pc=self.pc, regs=self.regs.dump())
 
 
+    # ============================================================
+    # AI-BEGIN
+    # The core of the CPU: this executes exactly one instruction.
+    # It implements fetch → decode → execute → memory → writeback
+    # following the classic single-cycle datapath structure.
+    # ============================================================
     def step(self) -> None:
         pc = self.pc
         pc_plus_4 = _mask32(pc + 4)
 
-        # 1. Fetch instruction from instruction memory
+        # 1. Fetch
         instr_word = self.imem.load_word(pc)
 
-        # 2. Decode instruction fields
+        # 2. Decode instruction
         di: DecodedInstr = decode(instr_word)
 
-        # 3. Control signals
+        # 3. Generate control signals
         ctrl: ControlSignals = decode_control(di)
 
-        # 4. Compute immediates based on opcode
+        # 4. Immediate generation (based on opcode type)
         opc = di.opcode
         imm = 0
-
         if opc in (OPCODES["OP_IMM"], OPCODES["LOAD"], OPCODES["JALR"]):
             imm = imm_i(instr_word)
         elif opc == OPCODES["STORE"]:
@@ -163,79 +192,75 @@ class CPU:
         elif opc == OPCODES["JAL"]:
             imm = imm_j(instr_word)
 
-        # 5. Read registers
+        # 5. Register read
         rs1_val = self.regs.read(di.rs1)
         rs2_val = self.regs.read(di.rs2)
 
-        # 6. Select ALU operands
-        # First operand: usually rs1, except AUIPC (PC) or similar
+        # 6. Operand selection for ALU
         if ctrl.use_pc_plus_imm:
             op_a = pc
         else:
             op_a = rs1_val
 
-        # Second operand: rs2 or an immediate
         if ctrl.use_imm_high:
-            # LUI: use upper immediate directly
-            op_b = imm
+            op_b = imm             # LUI uses the upper immediate directly
         elif ctrl.alu_src_imm:
-            op_b = imm
+            op_b = imm             # I-type uses immediate
         else:
-            op_b = rs2_val
+            op_b = rs2_val         # R-type uses register operand
 
-        # 7. Execute ALU operation
+        # 7. ALU execution
         alu_result = _alu_execute(ctrl.alu_op, op_a, op_b)
 
-        # 8. Memory access (if needed)
+        # 8. Memory stage
         mem_data = 0
         if ctrl.mem_read:
             mem_data = self.dmem.load_word(alu_result)
         if ctrl.mem_write:
             self.dmem.store_word(alu_result, rs2_val)
 
-        # 9. Decide write-back value
+        # 9. Write-back value selection
         wb_val = alu_result
         if ctrl.mem_to_reg:
             wb_val = mem_data
         if ctrl.jump or ctrl.jalr:
-            # For JAL / JALR: rd gets PC+4
-            wb_val = pc_plus_4
+            wb_val = pc_plus_4  # link register = PC + 4
 
         # 10. Register write-back
         if ctrl.reg_write and di.rd != 0:
             self.regs.write(di.rd, wb_val)
 
-        # 11. Branch / jump target
+        # 11. Next PC calculation
         next_pc = pc_plus_4
 
         # Branch
         if ctrl.branch_cond is not None:
-            taken = _branch_taken(ctrl.branch_cond, rs1_val, rs2_val)
-            if taken:
+            if _branch_taken(ctrl.branch_cond, rs1_val, rs2_val):
                 next_pc = _mask32(pc + imm)
 
         # JAL
         if ctrl.jump:
             next_pc = _mask32(pc + imm)
 
-        # JALR
+        # JALR (must clear LSB)
         if ctrl.jalr:
             target = rs1_val + imm
-            # JALR clears bit 0 of the target
             next_pc = _mask32(target & ~1)
 
-        # 12. Commit PC and increment cycle counter
+        # 12. Commit next PC
         self.pc = next_pc
         self.cycle += 1
+    # AI-END
+    # ============================================================
 
 
     def run(self, max_steps: int = 10_000) -> None:
+        """Run repeatedly for up to max_steps instructions."""
         for _ in range(max_steps):
             self.step()
 
-# -----------------------------------------------------------------------------
-# Compatibility alias so tests can import SingleCycleCPU
-# -----------------------------------------------------------------------------
+
+# ----------------------------------------
+# Compatibility alias for the tests
+# ----------------------------------------
 SingleCycleCPU = CPU
-
-

@@ -1,41 +1,141 @@
 {
-  "total_lines": 917,
-  "ai_tagged_lines": 324,
-  "percent": 35.3,
-  "tools": ["ChatGPT"],
-  "method": "Counted lines inside AI-BEGIN/AI-END markers across all project files using PowerShell measure-object.",
+  "ai_tagged_lines": 585,
+  "total_lines": 1572,
+  "percent": 37.2,
+  "tools": [
+    "ChatGPT"
+  ],
+  "method": "Counted lines inside AI-BEGIN/AI-END markers using PowerShell.",
   "details": {
-    "src/numeric_core/bits.py": {
+    "src\\numeric_core\\fpu_f32.py": {
       "ai_blocks": [
-        { "start_line": 22, "end_line": 71 }
+        {
+          "start_line": 27,
+          "end_line": 76
+        },
+        {
+          "start_line": 86,
+          "end_line": 120
+        }
       ],
-      "ai_lines": 50
+      "ai_lines": 85
     },
-    "src/numeric_core/twos.py": {
+    "src\\cpu_core\\isa.py": {
       "ai_blocks": [
-        { "start_line": 10, "end_line": 69 }
+        {
+          "start_line": 54,
+          "end_line": 64
+        },
+        {
+          "start_line": 86,
+          "end_line": 104
+        },
+        {
+          "start_line": 114,
+          "end_line": 132
+        }
+      ],
+      "ai_lines": 49
+    },
+    "src\\cpu_core\\regfile.py": {
+      "ai_blocks": [],
+      "ai_lines": 0
+    },
+    "src\\cpu_core\\datapath.py": {
+      "ai_blocks": [
+        {
+          "start_line": 62,
+          "end_line": 100
+        },
+        {
+          "start_line": 163,
+          "end_line": 253
+        }
+      ],
+      "ai_lines": 130
+    },
+    "src\\numeric_core\\bits.py": {
+      "ai_blocks": [
+        {
+          "start_line": 49,
+          "end_line": 69
+        }
+      ],
+      "ai_lines": 21
+    },
+    "src\\numeric_core\\twos.py": {
+      "ai_blocks": [
+        {
+          "start_line": 10,
+          "end_line": 69
+        }
       ],
       "ai_lines": 60
     },
-    "src/numeric_core/alu.py": {
+    "src\\numeric_core\\adders.py": {
+      "ai_blocks": [],
+      "ai_lines": 0
+    },
+    "src\\cpu_core\\run_cpu.py": {
+      "ai_blocks": [],
+      "ai_lines": 0
+    },
+    "src\\numeric_core\\alu.py": {
       "ai_blocks": [
-        { "start_line": 11, "end_line": 20 }
+        {
+          "start_line": 11,
+          "end_line": 20
+        }
       ],
       "ai_lines": 10
     },
-    "src/numeric_core/mdu.py": {
-      "ai_blocks": [
-        { "start_line": 43, "end_line": 64 },
-        { "start_line": 110, "end_line": 132 },
-        { "start_line": 138, "end_line": 190 }
-      ],
-      "ai_lines": 98
+    "src\\numeric_core\\__init__.py": {
+      "ai_blocks": [],
+      "ai_lines": 0
     },
-    "src/numeric_core/fpu_f32.py": {
+    "src\\numeric_core\\shifter.py": {
+      "ai_blocks": [],
+      "ai_lines": 0
+    },
+    "src\\cpu_core\\control.py": {
       "ai_blocks": [
-        { "start_line": 10, "end_line": 118 }
+        {
+          "start_line": 50,
+          "end_line": 197
+        }
       ],
-      "ai_lines": 109
+      "ai_lines": 148
+    },
+    "src\\cpu_core\\prog_loader.py": {
+      "ai_blocks": [
+        {
+          "start_line": 49,
+          "end_line": 60
+        }
+      ],
+      "ai_lines": 12
+    },
+    "src\\numeric_core\\mdu.py": {
+      "ai_blocks": [
+        {
+          "start_line": 135,
+          "end_line": 185
+        }
+      ],
+      "ai_lines": 51
+    },
+    "src\\cpu_core\\memory.py": {
+      "ai_blocks": [
+        {
+          "start_line": 63,
+          "end_line": 81
+        }
+      ],
+      "ai_lines": 19
+    },
+    "src\\numeric_core\\trace.py": {
+      "ai_blocks": [],
+      "ai_lines": 0
     }
   }
 }

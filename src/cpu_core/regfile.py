@@ -1,60 +1,98 @@
 # src/cpu_core/regfile.py
 from typing import List
 
+# ------------------------------------------------------------
+# Register File Constants
+# ------------------------------------------------------------
+NUM_REGS = 32   # RV32I has 32 integer registers: x0–x31
+XLEN = 32       # Architecture width in bits
 
-NUM_REGS = 32
-XLEN = 32
 
-
+# ------------------------------------------------------------
+# Basic helpers (simple ↠ no AI tag needed)
+# ------------------------------------------------------------
 def _check_idx(idx: int) -> None:
-    """Simple bounds check for a register index."""
+    """Ensure a register index is in the valid range 0–31."""
     if not (0 <= idx < NUM_REGS):
         raise IndexError(f"Register index out of range: {idx}")
 
+
 def _mask32(value: int) -> int:
-    """Mask a Python int down to 32 bits."""
+    """Force a Python int to behave like a 32-bit hardware register."""
     return value & 0xFFFF_FFFF
 
 
+# ------------------------------------------------------------
+# Register File (x0 hard-wired to zero)
+# ------------------------------------------------------------
 class RegFile:
-    """Simple 32-register file with x0 hardwired to zero."""
+    """
+    A simple RV32I 32-register file.
+
+    • x0 is permanently zero (writes to x0 are ignored)
+    • All other registers store 32-bit values
+    • Internally, we use a Python list for simplicity
+    """
 
     def __init__(self) -> None:
-        # Use a plain Python list of ints to store register values.
-        # regs[0] corresponds to x0, regs[1] to x1, ..., regs[31] to x31.
+        # regs[i] corresponds to register xi (0–31).
+        # Start with all registers = 0.
         self._regs: List[int] = [0] * NUM_REGS
 
+    # --------------------------------------------------------
+    # Reset logic
+    # --------------------------------------------------------
     def reset(self) -> None:
-        """Reset all registers to 0 (x0 is already 0)."""
+        """
+        Reset all registers (except x0) to zero.
+
+        x0 is already 0 and stays 0 forever per RISC-V spec.
+        """
         for i in range(1, NUM_REGS):
             self._regs[i] = 0
 
+    # --------------------------------------------------------
+    # Register read
+    # --------------------------------------------------------
     def read(self, idx: int) -> int:
         """
         Read the value of register x[idx].
-        Always returns a 32-bit value.
+
+        Always returns the masked 32-bit value.
         """
         _check_idx(idx)
-        # x0 is stored as 0, so no special case is needed here.
         return _mask32(self._regs[idx])
 
+    # --------------------------------------------------------
+    # Register write
+    # --------------------------------------------------------
     def write(self, idx: int, value: int, we: bool = True) -> None:
         """
-        Write 'value' to register x[idx] if write enable is True.
-        Writes to x0 (idx == 0) are ignored to enforce x0 == 0.
+        Write 'value' to register x[idx] if write-enable is True.
+
+        • Writes to x0 (idx = 0) are ignored — required by spec.
+        • All written values are masked to 32 bits.
         """
         if not we:
             return
+
         _check_idx(idx)
+
         if idx == 0:
-            # Ignore writes to x0 (it must always stay 0).
+            # Software attempting to modify x0 should have no effect.
             return
+
         self._regs[idx] = _mask32(value)
 
-
+    # --------------------------------------------------------
+    # Debugging helper
+    # --------------------------------------------------------
     def dump(self) -> list[int]:
         """
-        Return a copy of the internal register list.
-        Useful for debugging or tests that want to inspect all registers.
+        Return a copy of all register values.
+
+        Useful for:
+        • Debug output
+        • Test suites validating full CPU state
         """
         return list(self._regs)
